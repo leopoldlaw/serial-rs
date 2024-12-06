@@ -1,2 +1,6 @@
 [workspace]
 members = ["serial-core", "serial-unix", "serial-windows", "serial"]
+
+[patch.crates-io]
+termios = { git = 'https://github.com/leopoldlaw/termios-rs.git', branch = 'aix' }
+ioctl-rs = { git = 'https://github.com/ecnelises/ioctl-rs.git', branch = 'aix-0_1_6' }

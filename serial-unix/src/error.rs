@@ -42,7 +42,7 @@ pub fn from_io_error(io_error: io::Error) -> core::Error {
 const TMPBUF_SZ: usize = 128;
 
 pub fn errno() -> i32 {
-    #[cfg(any(target_os = "macos", target_os = "ios", target_os = "freebsd"))]
+    #[cfg(any(target_os="aix",target_os = "macos", target_os = "ios", target_os = "freebsd"))]
     unsafe fn errno_location() -> *const c_int {
         extern { fn __error() -> *const c_int; }
         __error()

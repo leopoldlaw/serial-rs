@@ -376,16 +376,22 @@ impl SerialPortSettings for TTYSettings {
 
     fn flow_control(&self) -> Option<core::FlowControl> {
         use termios::{IXON, IXOFF};
-        use termios::os::target::CRTSCTS;
 
-        if self.termios.c_cflag & CRTSCTS != 0 {
-            Some(core::FlowHardware)
-        }
-        else if self.termios.c_iflag & (IXON | IXOFF) != 0 {
-            Some(core::FlowSoftware)
-        }
-        else {
-            Some(core::FlowNone)
+        #[cfg(not(target_os = "aix"))]
+        { use termios::os::target::CRTSCTS;}
+
+        #[cfg(target_os = "aix")]
+        { Some(core::FlowNone) }
+
+        #[cfg(not(target_os = "aix"))]
+        {
+           if self.termios.c_cflag & CRTSCTS != 0 {
+               Some(core::FlowHardware)
+           } else if self.termios.c_iflag & (IXON | IXOFF) != 0 {
+               Some(core::FlowSoftware)
+           } else {
+               Some(core::FlowNone)
+           }
         }
     }
 
@@ -393,7 +399,9 @@ impl SerialPortSettings for TTYSettings {
         use libc::EINVAL;
         use termios::cfsetspeed;
         use termios::{B50, B75, B110, B134, B150, B200, B300, B600, B1200, B1800, B2400, B4800, B9600, B19200, B38400};
-        use termios::os::target::{B57600, B115200, B230400};
+        
+        #[cfg(not(target_os = "aix"))]
+        use termios::os::target::{B57600, B115200, B230400}; 
 
         #[cfg(target_os = "linux")]
         use termios::os::linux::{B460800, B500000, B576000, B921600, B1000000, B1152000, B1500000, B2000000, B2500000, B3000000, B3500000, B4000000};
@@ -429,10 +437,13 @@ impl SerialPortSettings for TTYSettings {
             #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "openbsd"))]
             core::BaudOther(28800)   => B28800,
             core::Baud38400          => B38400,
+            #[cfg(not(target_os = "aix"))]
             core::Baud57600          => B57600,
             #[cfg(any(target_os = "macos", target_os = "freebsd", target_os = "openbsd"))]
             core::BaudOther(76800)   => B76800,
+            #[cfg(not(target_os = "aix"))]
             core::Baud115200         => B115200,
+            #[cfg(not(target_os = "aix"))]
             core::BaudOther(230400)  => B230400,
             #[cfg(any(target_os = "linux", target_os = "freebsd"))]
             core::BaudOther(460800)  => B460800,
@@ -460,6 +471,7 @@ impl SerialPortSettings for TTYSettings {
             core::BaudOther(4000000) => B4000000,
 
             core::BaudOther(_) => return Err(super::error::from_raw_os_error(EINVAL)),
+            _ => return Err(super::error::from_raw_os_error(EINVAL)),
         };
 
         match cfsetspeed(&mut self.termios, baud) {
@@ -516,6 +528,12 @@ impl SerialPortSettings for TTYSettings {
 
     fn set_flow_control(&mut self, flow_control: core::FlowControl) {
         use termios::{IXON, IXOFF};
+        
+        //TODO placeholder - I don't know what the AIX specific flow control is
+        #[cfg(target_os = "aix")]
+        const CRTSCTS: libc::tcflag_t = 0; 
+        
+        #[cfg(not(target_os = "aix"))]
         use termios::os::target::CRTSCTS;
 
         match flow_control {
