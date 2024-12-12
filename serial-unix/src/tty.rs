@@ -378,7 +378,7 @@ impl SerialPortSettings for TTYSettings {
         use termios::{IXON, IXOFF};
 
         #[cfg(not(target_os = "aix"))]
-        { use termios::os::target::CRTSCTS;}
+        use termios::os::target::CRTSCTS;
 
         #[cfg(target_os = "aix")]
         { Some(core::FlowNone) }
